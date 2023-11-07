@@ -4,10 +4,12 @@ from datetime import datetime
 from response.core.models import Action, ExternalUser, Incident
 from response.slack.cache import get_user_profile
 from response.slack.client import SlackError
+from response.slack.decorators import keyword_handler
 from response.slack.decorators.incident_command import (
     __default_incident_command,
     get_help,
 )
+from response.slack.decorators.incident_notification import recurring_notification
 from response.slack.models import CommsChannel
 from response.slack.reference_utils import reference_to_id
 
@@ -95,3 +97,12 @@ def set_action(incident: Incident, user_id: str, message: str):
     )
     Action(incident=incident, details=message, user=action_reporter).save()
     return True, None
+
+@keyword_handler(['runbook', 'run book'])
+def runbook_notification(comms_channel: CommsChannel, user: str, keyword: str, text: str, ts: str):
+    comms_channel.post_in_channel("📗 If you're looking for our runbooks they can be found here https://...")
+
+@recurring_notification(interval_mins=30, max_notifications=10)
+def take_a_break(incident: Incident):
+    comms_channel = CommsChannel.objects.get(incident=incident)
+    comms_channel.post_in_channel("👋 30 minutes have elapsed. Think about taking a few minutes away from the screen.")

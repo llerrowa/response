@@ -22,3 +22,4 @@ urlpatterns = [
     path("core/", include("response.core.urls")),
     path("", include("response.ui.urls")),
 ]
+

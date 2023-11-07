@@ -17,7 +17,7 @@ def remind_severity(incident: Incident):
         pass
 
 
-@recurring_notification(interval_mins=2, max_notifications=5)
+@recurring_notification(interval_mins=5, max_notifications=5)
 def remind_incident_lead(incident: Incident):
     try:
         comms_channel = CommsChannel.objects.get(incident=incident)
@@ -37,7 +37,7 @@ def remind_close_incident(incident: Incident):
         return
 
     # Only remind during the day to prevent alerting people at unsociable hours
-    if datetime.now().hour not in range(9, 18):
+    if datetime.now().hour not in range(8, 18):
         return
 
     try:

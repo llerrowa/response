@@ -80,7 +80,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "demo.wsgi.application"
 
-
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
@@ -123,7 +122,7 @@ USE_TZ = False
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 STATIC_URL = "/static/"
-STATIC_ROOT = "static"
+STATIC_ROOT = "/home/app/web/staticfiles/"
 
 
 # Django Rest Framework
@@ -191,8 +190,8 @@ def get_env_var(setting, warn_only=False):
 
 
 SLACK_TOKEN = get_env_var("SLACK_TOKEN")
-SLACK_CLIENT = SlackClient(SLACK_TOKEN)
-
+SLACK_APP_TOKEN = get_env_var("SLACK_APP_TOKEN")
+SLACK_CLIENT = SlackClient(SLACK_TOKEN, SLACK_APP_TOKEN)
 
 # Whether to use https://pypi.org/project/bleach/ to strip potentially dangerous
 # HTML input in string fields

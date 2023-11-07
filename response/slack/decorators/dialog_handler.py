@@ -1,7 +1,5 @@
 import logging
 
-import after_response
-
 logger = logging.getLogger(__name__)
 
 DIALOG_HANDLERS = {}
@@ -20,7 +18,6 @@ def remove_dialog_handler(callback_id):
     DIALOG_HANDLERS.pop(callback_id, None)
 
 
-@after_response.enable
 def handle_dialog(payload):
     callback_id = payload["callback_id"]
     if callback_id not in DIALOG_HANDLERS:

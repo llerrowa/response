@@ -1,7 +1,7 @@
 from unittest import mock
 
 import pytest
-import slackclient
+import slack_sdk
 from django.conf import settings
 
 from response.slack import client
@@ -10,7 +10,7 @@ from tests.slack.slack_payloads import user_by_email
 
 @pytest.fixture
 def slack_api_mock(monkeypatch):
-    client_mock = mock.Mock(spec=slackclient.SlackClient)
+    client_mock = mock.Mock(spec=slack_sdk.WebClient)
     monkeypatch.setattr(settings.SLACK_CLIENT, "client", client_mock)
     return client_mock
 
@@ -19,7 +19,7 @@ def slack_api_mock(monkeypatch):
 def slack_client(slack_api_mock):
     # We set the backoff ridiculously low so that we're not hanging around
     # waiting for retries in tests
-    c = client.SlackClient("test-token", retry_base_backoff_seconds=0.0000001)
+    c = client.WebClient("test-token", retry_base_backoff_seconds=0.0000001)
     c.client = slack_api_mock
     return c
 

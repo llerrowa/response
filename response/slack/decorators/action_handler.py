@@ -1,7 +1,5 @@
 import logging
 
-import after_response
-
 from response.core.models.incident import Incident
 from response.slack.models.comms_channel import CommsChannel
 
@@ -34,7 +32,6 @@ def remove_action_handler(callback_id):
     SLACK_ACTION_MAPPINGS.pop(callback_id, None)
 
 
-@after_response.enable
 def handle_action(payload):
     actions = payload["actions"]
 
