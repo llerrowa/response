@@ -14,7 +14,7 @@ services:
       - db
     environment:
       POSTGRES: "true"
-    env_file: .env
+    env_file: .env-prod
     volumes:
       - ./:/app
       - ../:/response
@@ -43,7 +43,7 @@ services:
     tty: true
 
   db:
-    image: "postgres:11.2"
+    image: "postgres:16.0"
     container_name: postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data/
