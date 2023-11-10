@@ -1,4 +1,4 @@
-from django.conf.urls import include, url
+from django.urls import include, re_path
 from rest_framework import routers
 
 from response.core.views import (
@@ -35,4 +35,4 @@ router.register(r"events", EventsViewSet)
 
 # Wire up our API using automatic URL routing.
 # Additionally, we include login URLs for the browsable API.
-urlpatterns = [url(r"^", include(router.urls))]
+urlpatterns = [re_path(r"^", include(router.urls))]

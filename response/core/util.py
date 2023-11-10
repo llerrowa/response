@@ -11,7 +11,7 @@ def sanitize(string):
             string,
             tags=bleach_whitelist.markdown_tags,
             attributes=bleach_whitelist.markdown_attrs,
-            styles=bleach_whitelist.all_styles,
+            css_sanitizer=bleach_whitelist.all_styles,
         )
 
     return string

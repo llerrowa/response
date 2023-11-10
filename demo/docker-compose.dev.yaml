@@ -34,12 +34,12 @@ services:
     tty: true
 
   db:
-    image: "postgres:12-alpine"
+    image: "postgres:16.0"
     container_name: postgres
     environment:
       POSTGRES_PASSWORD: example
-    #volumes:
-    #  - postgres_data:/var/lib/postgresql/data/
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
 
 volumes:
   postgres_data:

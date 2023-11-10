@@ -16,4 +16,8 @@ python3 manage.py collectstatic --noinput
 echo "[INFO] Waiting for DB"
 wait_for_db
 
+echo "[INFO] Migrating database"
+cd /app
+python3 manage.py migrate --noinput
+
 exec "$@"
