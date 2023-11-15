@@ -79,12 +79,6 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    "impact",
-                    models.TextField(
-                        blank=True, help_text="What impact is this having?", null=True
-                    ),
-                ),
-                (
                     "severity",
                     models.CharField(
                         blank=True,
@@ -92,7 +86,6 @@ class Migration(migrations.Migration):
                             ("1", "critical"),
                             ("2", "major"),
                             ("3", "minor"),
-                            ("4", "trivial"),
                         ],
                         max_length=10,
                         null=True,
