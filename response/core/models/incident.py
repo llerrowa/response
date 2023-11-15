@@ -72,7 +72,7 @@ class Incident(models.Model):
     )
 
     # Severity
-    SEVERITIES = (("1", "critical"), ("2", "major"), ("3", "minor"), ("4", "trivial"))
+    SEVERITIES = (("1", "critical"), ("2", "major"), ("3", "minor"))
     severity = models.CharField(
         max_length=10, blank=True, null=True, choices=SEVERITIES
     )
