@@ -66,8 +66,8 @@ class Migration(migrations.Migration):
                         verbose_name="ID",
                     ),
                 ),
-                ("report", models.CharField(max_length=200)),
-                ("report_time", models.DateTimeField()),
+                ("name", models.CharField(max_length=200)),
+                ("incident_time", models.DateTimeField()),
                 ("start_time", models.DateTimeField()),
                 ("end_time", models.DateTimeField(blank=True, null=True)),
                 (

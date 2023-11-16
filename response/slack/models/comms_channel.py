@@ -44,7 +44,7 @@ class CommsChannelManager(models.Manager):
             )
 
             settings.SLACK_CLIENT.set_channel_topic(
-                channel_id, f"{incident.report} - {doc_url}"
+                channel_id, f"{incident.name} - {doc_url}"
             )
         except SlackError as e:
             logger.error(f"Failed to set channel topic {e}")
@@ -83,4 +83,4 @@ class CommsChannel(models.Model):
             logger.info("Attempted to rename channel to nothing. No action take.")
 
     def __str__(self):
-        return self.incident.report
+        return self.incident.name

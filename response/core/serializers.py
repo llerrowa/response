@@ -126,13 +126,11 @@ class IncidentSerializer(serializers.ModelSerializer):
             "action_items",
             "comms_channel",
             "end_time",
-            "impact",
             "is_closed",
             "lead",
             "id",
-            "report",
-            "report_time",
-            "report_only",
+            "name",
+            "incident_time",
             "reporter",
             "severity",
             "start_time",
@@ -141,7 +139,6 @@ class IncidentSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         instance.end_time = validated_data.get("end_time", instance.end_time)
-        instance.impact = validated_data.get("impact", instance.impact)
 
         new_lead = validated_data.get("lead", None)
         if new_lead:

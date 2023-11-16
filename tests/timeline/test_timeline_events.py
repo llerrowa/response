@@ -28,7 +28,7 @@ def test_update_incident_report():
     incident = IncidentFactory.create()
     new_report = faker.paragraph(nb_sentences=3, variable_nb_sentences=True)
 
-    incident.report = new_report
+    incident.name = new_report
     incident.save()
 
     event = TimelineEvent.objects.filter(

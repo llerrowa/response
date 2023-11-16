@@ -3,15 +3,15 @@ from datetime import datetime
 
 from response.core.models.incident import Incident
 from response.slack.decorators import ActionContext, action_handler
-from response.slack.dialog_builder import (
-    Dialog,
+from response.slack.modal_builder import (
+    Modal,
     SelectFromUsers,
     SelectWithOptions,
     Text,
     TextArea,
 )
 from response.slack.models import CommsChannel, HeadlinePost
-from response.slack.settings import INCIDENT_EDIT_DIALOG
+from response.slack.settings import INCIDENT_EDIT_MODAL
 
 logger = logging.getLogger(__name__)
 
@@ -37,22 +37,15 @@ def handle_create_comms_channel(ac: ActionContext):
 
 @action_handler(HeadlinePost.EDIT_INCIDENT_BUTTON)
 def handle_edit_incident_button(ac: ActionContext):
-    dialog_elements = [
-        Text(label="Report", name="report", value=ac.incident.report),
+    modal_blocks = [
+        Text(label="Name", name="name", value=ac.incident.name),
         TextArea(
             label="Summary",
             name="summary",
             value=ac.incident.summary,
             optional=True,
+            multiline=True,
             placeholder="Can you share any more details?",
-        ),
-        TextArea(
-            label="Impact",
-            name="impact",
-            value=ac.incident.impact,
-            optional=True,
-            placeholder="Who or what might be affected?",
-            hint="Think about affected people, systems, and processes",
         ),
         SelectFromUsers(
             label="Lead",
@@ -69,10 +62,11 @@ def handle_edit_incident_button(ac: ActionContext):
         ),
     ]
 
-    dialog = Dialog(
+    print(ac.incident.pk)
+    modal = Modal(
         title=f"Edit Incident {ac.incident.pk}",
         submit_label="Save",
         state=ac.incident.pk,
-        elements=dialog_elements,
+        blocks=modal_blocks,
     )
-    dialog.send_open_dialog(INCIDENT_EDIT_DIALOG, ac.trigger_id)
+    modal.send_open_modal(INCIDENT_EDIT_MODAL, ac.trigger_id)

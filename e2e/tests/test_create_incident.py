@@ -49,7 +49,6 @@ def test_submit_dialog_creates_incident(client, slack_client, slack_httpserver):
                     "submission": {
                         "report": report,
                         "summary": "not sure what tho",
-                        "impact": "lots",
                         "lead": "U123",
                         "severity": "major",
                     },

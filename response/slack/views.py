@@ -10,18 +10,18 @@ from response.slack.authentication import slack_authenticate
 from response.slack.cache import update_user_cache
 from response.slack.decorators import (
     handle_action,
-    handle_dialog,
+    handle_modal,
     handle_event,
     handle_notifications,
 )
-from response.slack.dialog_builder import (
-    Dialog,
+from response.slack.modal_builder import (
+    Modal,
     SelectFromUsers,
     SelectWithOptions,
     Text,
     TextArea,
 )
-from response.slack.settings import INCIDENT_REPORT_DIALOG
+from response.slack.settings import INCIDENT_CREATE_MODAL
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ def slash_command(request):
     Handles slash commands from slack
     More details here: https://api.slack.com/slash-commands
     Note: The order the elements are specified is the order they
-    appear in the slack dialog
+    appear in the slack modal
 
     @param request the request from slack containing the slash command
     @return: return a HTTP response to indicate the request was handled
@@ -43,10 +43,10 @@ def slash_command(request):
     trigger_id = request.POST.get("trigger_id")
     report = request.POST.get("text")
 
-    dialog = Dialog(
+    modal = Modal(
         title="Report an Incident",
         submit_label="Report",
-        elements=[
+        blocks=[
             Text(
                 label="Title",
                 name="report",
@@ -56,20 +56,7 @@ def slash_command(request):
         ],
     )
 
-    if hasattr(settings, "INCIDENT_REPORT_CHANNEL_ID"):
-        dialog.add_element(
-            SelectWithOptions(
-                [
-                    ("Yes - this is a live incident happening right now", "live"),
-                    ("No - this is just a report of something that happened", "report"),
-                ],
-                label="Is this a live incident?",
-                name="incident_type",
-                optional=False,
-            )
-        )
-
-    dialog.add_element(
+    modal.add_block(
         TextArea(
             label="Summary",
             name="summary",
@@ -78,19 +65,9 @@ def slash_command(request):
         )
     )
 
-    dialog.add_element(
-        TextArea(
-            label="Impact",
-            name="impact",
-            optional=True,
-            placeholder="Who or what might be affected?",
-            hint="Think about affected people, systems, and processes",
-        )
-    )
+    modal.add_block(SelectFromUsers(label="Lead", name="lead", optional=True))
 
-    dialog.add_element(SelectFromUsers(label="Lead", name="lead", optional=True))
-
-    dialog.add_element(
+    modal.add_block(
         SelectWithOptions(
             [(s.capitalize(), i) for i, s in Incident.SEVERITIES],
             label="Severity",
@@ -100,10 +77,10 @@ def slash_command(request):
     )
 
     logger.info(
-        f"Handling Slack slash command for user {user_id}, report {report} - opening dialog"
+        f"Handling Slack slash command for user {user_id}, report {report} - opening modal"
     )
 
-    dialog.send_open_dialog(INCIDENT_REPORT_DIALOG, trigger_id)
+    modal.send_open_modal(INCIDENT_CREATE_MODAL, trigger_id)
     return HttpResponse()
 
 
@@ -122,7 +99,7 @@ def action(request):
     logger.info(f"Handling Slack action of type '{action_type}'")
 
     if action_type == "dialog_submission":
-        handle_dialog.after_response(payload)
+        handle_modal.after_response(payload)
     elif action_type == "block_actions":
         handle_action.after_response(payload)
     else:

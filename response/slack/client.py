@@ -17,8 +17,8 @@ class SlackClient(object):
         self,
         api_token,
         app_token,
-        max_retry_attempts=10,
-        retry_base_backoff_seconds=0.2,
+        max_retry_attempts=6,
+        retry_base_backoff_seconds=2,
         retryable_errors=None,
     ):
         self.api_token = api_token
@@ -41,7 +41,7 @@ class SlackClient(object):
                     error = e.response.get("error", "<no error given>")
 
                     if error in self.retryable_errors:
-                        backoff_seconds = self.retry_base_backoff_seconds * i
+                        backoff_seconds = self.retry_base_backoff_seconds ^ i
                         logging.warning(
                             f"Retrying request to {api_method.__name__} after error {error}. Backing off {backoff_seconds:.2f}s (attempt {i} of {self.max_retry_attempts})"
                         )
@@ -265,5 +265,7 @@ class SlackClient(object):
 
         return self.api_call(self.client.conversations_rename, channel=channel_id, name=new_name)
 
-    def dialog_open(self, dialog, trigger_id):
-        return self.api_call(self.client.dialog_open, trigger_id=trigger_id, dialog=dialog)
+    def views_open(self, modal, trigger_id):
+        print('hellllllllllllllllllllo')
+        print(modal)
+        return self.api_call(self.client.views_open, trigger_id=trigger_id, view=modal)

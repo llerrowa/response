@@ -46,12 +46,12 @@ class HeadlinePost(models.Model):
 
         # Set the fallback text so notifications look nice
         msg.set_fallback_text(
-            f"{self.incident.report} reported by {user_reference(self.incident.reporter)}"
+            f"{self.incident.name} created by {user_reference(self.incident.reporter)}"
         )
 
         # Add report/people
         msg.add_block(
-            Section(block_id="report", text=Text(f"*{self.incident.report}*"))
+            Section(block_id="name", text=Text(f"*{self.incident.name}*"))
         )
         msg.add_block(
             Section(
@@ -138,12 +138,7 @@ class HeadlinePost(models.Model):
             msg.add_block(actions)
 
         # Post / update the slack message
-        if self.incident.report_only and hasattr(
-            settings, "INCIDENT_REPORT_CHANNEL_ID"
-        ):
-            channel_id = settings.INCIDENT_REPORT_CHANNEL_ID
-        else:
-            channel_id = settings.INCIDENT_CHANNEL_ID
+        channel_id = settings.INCIDENT_CHANNEL_ID
 
         try:
             response = msg.send(channel_id, self.message_ts)
@@ -172,9 +167,6 @@ class HeadlinePost(models.Model):
 
 @headline_post_action(order=100)
 def create_comms_channel_action(headline_post):
-    if headline_post.incident.report_only:
-        # Reports don't link to comms channels
-        return None
     if headline_post.comms_channel:
         # No need to create an action, channel already exists
         return None

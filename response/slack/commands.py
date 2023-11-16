@@ -8,91 +8,77 @@ logger = logging.getLogger(__name__)
 
 def command_listeners(app: App):
     @app.command("/incident")
-    def incident(ack, body, logger):
+    def incident(ack, body, logger, channel_id):
         ack()
         user_id = body["user_id"]
         trigger_id = body["trigger_id"]
-        report = body["text"]
+        input = body["text"]
 
         from response.core.models.incident import Incident
 
-        from response.slack.dialog_builder import (
-            Dialog,
+        from response.slack.modal_builder import (
+            Modal,
             SelectFromUsers,
             SelectWithOptions,
             Text,
             TextArea,
         )
-        from response.slack.settings import INCIDENT_REPORT_DIALOG
-        dialog = Dialog(
-            title="Report an Incident",
-            submit_label="Report",
-            elements=[
+        from response.slack.settings import INCIDENT_CREATE_MODAL
+
+        modal = Modal(
+            title="Create Incident",
+            submit_label="Create",
+            blocks=[
                 Text(
-                    label="Title",
-                    name="report",
-                    placeholder="What's happened, in a sentence?",
-                    value=report,
+                    label="Incident Name",
+                    name="name",
+                    placeholder="Incident Name",
+                    value=input,
+                    optional=False,
+                    hint="The name of the incident will be used to create a slack channel"
                 )
             ],
+            state=channel_id
         )
 
-        dialog.add_element(
+        modal.add_block(
             SelectWithOptions(
-                [
-                    ("Yes - this is a live incident happening right now", "live"),
-                    ("No - this is just a report of something that happened", "report"),
-                ],
-                label="Is this a live incident?",
-                name="incident_type",
+                [(s.capitalize(), i) for i, s in Incident.SEVERITIES],
+                label="Severity",
+                name="severity",                
                 optional=False,
+                placeholder="Select Severity"
             )
         )
 
-        dialog.add_element(
+        modal.add_block(
             TextArea(
                 label="Summary",
                 name="summary",
                 optional=True,
-                placeholder="Can you share any more details?",
+                multiline=True,
+                placeholder="Can you share any useful details?",
+                hint="Your current understanding of what is happening and the impact it is having. Fine to go into detail here."
             )
         )
 
-        dialog.add_element(
-            TextArea(
-                label="Impact",
-                name="impact",
-                optional=True,
-                placeholder="Who or what might be affected?",
-                hint="Think about affected people, systems, and processes",
-            )
-        )
-
-        dialog.add_element(SelectFromUsers(label="Lead", name="lead", optional=True))
-
-        dialog.add_element(
-            SelectWithOptions(
-                [(s.capitalize(), i) for i, s in Incident.SEVERITIES],
-                label="Severity",
-                name="severity",
-                optional=True,
-            )
-        )
+        modal.add_block(SelectFromUsers(label="Lead", name="lead", optional=True, placeholder="Select lead"))
 
         logger.info(
-            f"Handling Slack slash command for user {user_id}, report {report} - opening dialog"
+            f"Handling Slack slash command for user {user_id}, incident name {input} - opening modal"
         )
 
-        dialog.send_open_dialog(INCIDENT_REPORT_DIALOG, trigger_id)
+        modal.send_open_modal(INCIDENT_CREATE_MODAL, trigger_id)
 
-    @app.action({"type": "dialog_submission", "callback_id": re.compile(".*")})
-    def dialog_submission(ack, body, logger):
+    @app.view({"type": "view_submission", "callback_id": re.compile(".*")})
+    def modal_submission(ack, body, logger):
         ack()
-        action_type = body["callback_id"]
+        action_type = body["view"]["callback_id"]
+        channel_id = body["view"]["private_metadata"]
         logger.info(f"Handling Slack action of type {action_type}")
 
-        from response.slack.decorators.dialog_handler import handle_dialog
-        handle_dialog(body)
+        from response.slack.decorators.modal_handler import handle_modal
+        handle_modal(body, action_type, channel_id)
 
     @app.action({"type": "block_actions", "action_id": re.compile(".*")})
     def block_actions(ack, body, logger):

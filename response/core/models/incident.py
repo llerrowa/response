@@ -10,25 +10,21 @@ from response.core.util import sanitize
 class IncidentManager(models.Manager):
     def create_incident(
         self,
-        report,
+        name,
         reporter,
-        report_time,
-        report_only,
+        incident_time,
         private=False,
         summary=None,
-        impact=None,
         lead=None,
         severity=None,
     ):
         incident = self.create(
-            report=report,
+            name=name,
             reporter=reporter,
-            report_time=report_time,
-            report_only=report_only,
+            incident_time=incident_time,
             private=private,
-            start_time=report_time,
+            start_time=incident_time,
             summary=summary,
-            impact=impact,
             lead=lead,
             severity=severity,
         )
@@ -40,7 +36,7 @@ class Incident(models.Model):
     objects = IncidentManager()
 
     # Reporting info
-    report = models.CharField(max_length=200)
+    name = models.CharField(max_length=200)
     reporter = models.ForeignKey(
         ExternalUser,
         related_name="reporter",
@@ -48,8 +44,7 @@ class Incident(models.Model):
         blank=False,
         null=True,
     )
-    report_time = models.DateTimeField()
-    report_only = models.BooleanField(default=False)
+    incident_time = models.DateTimeField()
     private = models.BooleanField(default=False)
 
     start_time = models.DateTimeField(null=False)
@@ -57,10 +52,7 @@ class Incident(models.Model):
 
     # Additional info
     summary = models.TextField(
-        blank=True, null=True, help_text="What's the high level summary?"
-    )
-    impact = models.TextField(
-        blank=True, null=True, help_text="What impact is this having?"
+        blank=True, null=True, help_text="Can you share any useful details?"
     )
     lead = models.ForeignKey(
         ExternalUser,
@@ -78,7 +70,7 @@ class Incident(models.Model):
     )
 
     def __str__(self):
-        return self.report
+        return self.name
 
     def comms_channel(self):
         try:
@@ -120,23 +112,19 @@ class Incident(models.Model):
         if not self.severity:
             return "☁️"
 
-        return {"1": "⛈️", "2": "🌧️", "3": "🌦️", "4": "🌤️"}[self.severity]
+        return "🔥"
 
     def status_text(self):
-        if self.report_only:
-            return "reported"
-        elif self.is_closed():
+        if self.is_closed():
             return "resolved"
         else:
             return "live"
 
     def status_emoji(self):
-        if self.report_only:
-            return ":notebook:"
-        elif self.is_closed():
-            return ":droplet:"
+        if self.is_closed():
+            return "✅"
         else:
-            return ":fire:"
+            return "🚨"
 
     def badge_type(self):
         if self.is_closed():
@@ -152,7 +140,6 @@ class Incident(models.Model):
         return core.models.TimelineEvent.objects.filter(incident=self)
 
     def save(self, *args, **kwargs):
-        self.impact = sanitize(self.impact)
-        self.report = sanitize(self.report)
+        self.name = sanitize(self.name)
         self.summary = sanitize(self.summary)
         super(Incident, self).save(*args, **kwargs)

@@ -22,16 +22,12 @@ class IncidentFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Incident
 
-    impact = factory.LazyFunction(
-        lambda: faker.paragraph(nb_sentences=1, variable_nb_sentences=True)
-    )
-    report = factory.LazyFunction(
+    name = factory.LazyFunction(
         lambda: faker.paragraph(nb_sentences=3, variable_nb_sentences=True)
     )
-    report_time = factory.LazyFunction(
+    incident_time = factory.LazyFunction(
         lambda: faker.date_time_between(start_date="-6m", end_date="now", tzinfo=None)
     )
-    report_only = random.choice([True, False])
 
     reporter = factory.SubFactory("tests.factories.ExternalUserFactory")
     lead = factory.SubFactory("tests.factories.ExternalUserFactory")

@@ -29,7 +29,7 @@
             {% if incident.lead %}<li><span>Lead:</span>{{ incident.lead.display_name }}</li>{% endif %}
 
             <li><span>Start Time:</span>{% if incident.start_time %}{{ incident.start_time }}{% endif %}</li>
-            <li><span>Report Time:</span>{% if incident.report_time %}{{ incident.report_time }}{% endif %}</li>
+            <li><span>Report Time:</span>{% if incident.incident %}{{ incident.incident }}{% endif %}</li>
 
             {% if incident.is_closed %}
                 <li><span>End Time:</span>{{ incident.end_time }}</li>

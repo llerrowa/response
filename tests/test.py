@@ -36,7 +36,7 @@ def test_slash_command_invokes_dialog(post_from_slack_api, mock_slack):
 @pytest.mark.django_db(transaction=True)
 def test_submit_dialog_creates_incident(post_from_slack_api, mock_slack):
     with mock.patch(
-        "response.slack.dialog_handlers.get_user_profile",
+        "response.slack.modal_handlers.get_user_profile",
         return_value={"name": "Opsy McOpsface"},
     ):
 
@@ -98,7 +98,7 @@ def test_submit_dialog_creates_incident(post_from_slack_api, mock_slack):
 @pytest.mark.django_db(transaction=True)
 def test_submit_dialog_without_incident_type(post_from_slack_api, mock_slack):
     with mock.patch(
-        "response.slack.dialog_handlers.get_user_profile",
+        "response.slack.modal_handlers.get_user_profile",
         return_value={"name": "Opsy McOpsface"},
     ):
 
@@ -167,12 +167,10 @@ def test_edit_incident(post_from_slack_api, mock_slack):
     )[0]
 
     incident = Incident.objects.create_incident(
-        report="Something happened",
+        name="Something happened",
         reporter=user,
-        report_time=datetime.now(),
-        report_only=False,
+        incident_time=datetime.now(),
         summary="Testing editing incidents - before",
-        impact="Lots",
         lead=user,
         severity="1",
     )
@@ -187,9 +185,8 @@ def test_edit_incident(post_from_slack_api, mock_slack):
                 "channel": {"id": "D123"},
                 "response_url": "https://fake-response-url",
                 "submission": {
-                    "report": "",
+                    "name": "",
                     "summary": newsummary,
-                    "impact": "",
                     "lead": "U123",
                     "severity": "1",
                     "incident_type": "",

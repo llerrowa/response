@@ -6,27 +6,21 @@ from django.conf import settings
 
 from response.core.models import ExternalUser, Incident
 from response.slack.cache import get_user_profile
-from response.slack.decorators import dialog_handler
+from response.slack.decorators import modal_handler
 from response.slack.reference_utils import channel_reference
-from response.slack.settings import INCIDENT_EDIT_DIALOG, INCIDENT_REPORT_DIALOG
+from response.slack.settings import INCIDENT_CREATE_MODAL, INCIDENT_EDIT_MODAL
 
 logger = logging.getLogger(__name__)
 
 
-@dialog_handler(INCIDENT_REPORT_DIALOG)
+@modal_handler(INCIDENT_CREATE_MODAL)
 def report_incident(
-    user_id: str, channel_id: str, submission: Any, response_url: str, state: Any
-):
-    report = submission["report"]
-    summary = submission["summary"]
-    impact = submission["impact"]
-    lead_id = submission["lead"]
-    severity = submission["severity"]
-
-    if "incident_type" in submission:
-        report_only = submission["incident_type"] == "report"
-    else:
-        report_only = False
+    user_id: str, state: Any, channel_id: str
+): 
+    incident_name = state["name"]["name"]["value"]      
+    severity = state["severity"]["severity"]["selected_option"]["value"]
+    summary = state["summary"]["summary"]["value"]    
+    lead_id = state["lead"]["lead"]["selected_user"]
 
     name = get_user_profile(user_id)["name"]
     reporter, _ = ExternalUser.objects.get_or_create_slack(
@@ -41,35 +35,30 @@ def report_incident(
         )
 
     Incident.objects.create_incident(
-        report=report,
-        reporter=reporter,
-        report_time=datetime.now(),
-        report_only=report_only,
+        name=incident_name,
+        reporter=reporter,        
+        incident_time=datetime.now(),
         summary=summary,
-        impact=impact,
         lead=lead,
         severity=severity,
     )
 
-    if report_only and hasattr(settings, "INCIDENT_REPORT_CHANNEL_ID"):
-        incidents_channel_ref = channel_reference(settings.INCIDENT_REPORT_CHANNEL_ID)
-    else:
-        incidents_channel_ref = channel_reference(settings.INCIDENT_CHANNEL_ID)
+    incidents_channel_ref = channel_reference(settings.INCIDENT_CHANNEL_ID)
 
     text = (
-        f"Thanks for raising the incident 🙏\n\nHead over to {incidents_channel_ref} "
-        f"to complete the report and/or help deal with the issue"
+        f"Thank you for raising the incident 🙏\n\nPlease head over to {incidents_channel_ref} "
+        f"to help deal with the issue"
     )
+
     settings.SLACK_CLIENT.send_ephemeral_message(channel_id, user_id, text)
 
 
-@dialog_handler(INCIDENT_EDIT_DIALOG)
+@modal_handler(INCIDENT_EDIT_MODAL)
 def edit_incident(
-    user_id: str, channel_id: str, submission: Any, response_url: str, state: Any
+    user_id: str, state: Any
 ):
-    report = submission["report"]
+    name = submission["report"]
     summary = submission["summary"]
-    impact = submission["impact"]
     lead_id = submission["lead"]
     severity = submission["severity"]
 
@@ -88,9 +77,8 @@ def edit_incident(
 
         # deliberately update in this way the post_save signal gets sent
         # (required for the headline post to auto update)
-        incident.report = report
+        incident.name = name
         incident.summary = summary
-        incident.impact = impact
         incident.lead = lead
         incident.severity = severity
         incident.save()

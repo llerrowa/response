@@ -26,13 +26,13 @@ class ActionViewSet(viewsets.ModelViewSet):
 
 class IncidentViewSet(viewsets.ModelViewSet):
     """
-    Allows getting a list of Incidents (sorted by report time from newest to
+    Allows getting a list of Incidents (sorted by incident time from newest to
     oldest), and updating existing ones.
 
     Note that Incidents can only be created via the Slack workflow.
     """
 
-    queryset = Incident.objects.order_by("-report_time")
+    queryset = Incident.objects.order_by("-incident_time")
 
     serializer_class = serializers.IncidentSerializer
     pagination_class = pagination.LimitOffsetPagination
@@ -58,14 +58,14 @@ class IncidentsByMonthViewSet(viewsets.ModelViewSet):
     Note that Incidents can only be created via the Slack workflow.
     """
 
-    queryset = Incident.objects.order_by("-report_time")
+    queryset = Incident.objects.order_by("-incident_time")
 
     serializer_class = serializers.IncidentSerializer
     pagination_class = pagination.LimitOffsetPagination
 
     def list(self, request, year, month):
         incidents = self.queryset.filter(
-            report_time__year=year, report_time__month=month
+            incident__year=year, incident__month=month
         )
         page = self.paginate_queryset(incidents)
         if page is not None:

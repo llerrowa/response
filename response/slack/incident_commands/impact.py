@@ -2,8 +2,8 @@ import json
 import logging
 
 from response.core.models import Incident
-from response.slack import block_kit, dialog_builder
-from response.slack.decorators import ActionContext, action_handler, dialog_handler
+from response.slack import block_kit, modal_builder
+from response.slack.decorators import ActionContext, action_handler, modal_handler
 from response.slack.decorators.incident_command import __default_incident_command
 from response.slack.models import CommsChannel
 
@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 UPDATE_CURRENT_IMPACT_ACTION = "update-current-impact-action"
 SET_NEW_IMPACT_ACTION = "set-new-impact-action"
 PROPOSED_MESSAGE_BLOCK_ID = "proposed"
-UPDATE_IMPACT_DIALOG = "update-impact-dialog"
+UPDATE_IMPACT_MODAL = "update-impact-modal"
 
 NO_IMPACT_TEXT = "The impact of this incident hasn't been set yet."
 CURRENT_TITLE = "*This is the current impact:*\n"
@@ -43,7 +43,7 @@ def update_impact(incident: Incident, user_id: str, message: str):
     )
 
     # if the user has supplied a message, provide the option for them to set it without
-    # retyping in the dialog
+    # retyping in the modal
     if message:
         msg.add_block(
             block_kit.Section(
@@ -63,7 +63,6 @@ def update_impact(incident: Incident, user_id: str, message: str):
 @action_handler(SET_NEW_IMPACT_ACTION)
 def handle_set_new_impact(action_context: ActionContext):
     for block in action_context.message["blocks"]:
-        print("Looking at block", block)
         if block["block_id"] == PROPOSED_MESSAGE_BLOCK_ID:
             impact = block["text"]["text"].replace(PROPOSED_TITLE, "")
             action_context.incident.impact = impact
@@ -75,13 +74,13 @@ def handle_set_new_impact(action_context: ActionContext):
 
 
 @action_handler(UPDATE_CURRENT_IMPACT_ACTION)
-def handle_open_impact_dialog(action_context: ActionContext):
-    dialog = dialog_builder.Dialog(
+def handle_open_impact_modal(action_context: ActionContext):
+    modal = modal_builder.Modal(
         title="Update Impact",
         submit_label="Update",
         state=action_context.incident.pk,
-        elements=[
-            dialog_builder.TextArea(
+        blocks=[
+            modal_builder.TextArea(
                 label="Impact",
                 name="impact",
                 optional=False,
@@ -90,10 +89,10 @@ def handle_open_impact_dialog(action_context: ActionContext):
         ],
     )
 
-    dialog.send_open_dialog(UPDATE_IMPACT_DIALOG, action_context.trigger_id)
+    modal.send_open_modal(UPDATE_IMPACT_MODAL, action_context.trigger_id)
 
 
-@dialog_handler(UPDATE_IMPACT_DIALOG)
+@modal_handler(UPDATE_IMPACT_MODAL)
 def update_status_page(
     user_id: str, channel_id: str, submission: json, response_url: str, state: json
 ):

@@ -1,7 +1,7 @@
 from django.conf import settings
 
-INCIDENT_REPORT_DIALOG = "incident-report-dialog"
-INCIDENT_EDIT_DIALOG = "incident-edit-dialog"
+INCIDENT_CREATE_MODAL = "incident-create-modal"
+INCIDENT_EDIT_MODAL = "incident-edit-modal"
 
 SLACK_API_MOCK = getattr(settings, "SLACK_API_MOCK", None)
 

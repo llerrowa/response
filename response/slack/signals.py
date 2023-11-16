@@ -70,14 +70,11 @@ def add_timeline_events(sender, instance: Incident, **kwargs):
     if prev_state.lead != instance.lead:
         update_incident_lead_event(prev_state, instance)
 
-    if prev_state.report != instance.report:
-        update_incident_report_event(prev_state, instance)
+    if prev_state.name != instance.name:
+        update_incident_name_event(prev_state, instance)
 
     if prev_state.summary != instance.summary:
         update_incident_summary_event(prev_state, instance)
-
-    if prev_state.impact != instance.impact:
-        update_incident_impact_event(prev_state, instance)
 
     if prev_state.severity != instance.severity:
         update_incident_severity_event(prev_state, instance)
@@ -110,13 +107,13 @@ def update_incident_lead_event(prev_state, instance):
     )
 
 
-def update_incident_report_event(prev_state, instance):
+def update_incident_name_event(prev_state, instance):
     add_incident_update_event(
         incident=instance,
-        update_type="incident_report",
-        text=f'Incident report updated from "{prev_state.report}" to "{instance.report}"',
-        old_value=prev_state.report,
-        new_value=instance.report,
+        update_type="incident_name",
+        text=f'Incident name updated from "{prev_state.name}" to "{instance.name}"',
+        old_value=prev_state.name,
+        new_value=instance.name,
     )
 
 
@@ -132,23 +129,6 @@ def update_incident_summary_event(prev_state, instance):
         text=text,
         old_value=prev_state.summary,
         new_value=instance.summary,
-    )
-
-
-def update_incident_impact_event(prev_state, instance):
-    if prev_state.impact:
-        text = (
-            f'Incident impact updated from "{prev_state.impact}" to "{instance.impact}"'
-        )
-    else:
-        text = f'Incident impact added: "{instance.impact}"'
-
-    add_incident_update_event(
-        incident=instance,
-        update_type="incident_impact",
-        text=text,
-        old_value=prev_state.impact,
-        new_value=instance.impact,
     )
 
 
