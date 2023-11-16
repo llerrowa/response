@@ -266,6 +266,4 @@ class SlackClient(object):
         return self.api_call(self.client.conversations_rename, channel=channel_id, name=new_name)
 
     def views_open(self, modal, trigger_id):
-        print('hellllllllllllllllllllo')
-        print(modal)
         return self.api_call(self.client.views_open, trigger_id=trigger_id, view=modal)
