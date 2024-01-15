@@ -19,12 +19,14 @@ class Message:
         return serialized
 
     def send(self, channel, ts=None):
-        """
-        Build and send the message to the required channel
-        """
+        # Build and send the message to the required channel
         return settings.SLACK_CLIENT.send_or_update_message_block(
             channel, blocks=self.serialize(), fallback_text=self.fallback_text, ts=ts
         )
+    
+    def pin(self, channel, ts):
+        # Pin the message to the required channel
+        return settings.SLACK_CLIENT.pins_add(channel, ts)
 
 
 class Block:
@@ -34,7 +36,24 @@ class Block:
     def serialize(self):
         raise NotImplementedError
 
+class Context(Block):
+    def __init__(self, block_id=None, elements=None):
+        super().__init__(block_id=block_id)
+        self.elements = elements
 
+    def add_element(self, element):
+        if not self.elements:
+            self.elements = []
+
+        self.elements.append(element)
+
+    def serialize(self):
+        block = {"type": "context", "block_id": self.block_id}
+
+        block["elements"] = [e.serialize() for e in self.elements]
+
+        return block
+    
 class Section(Block):
     def __init__(self, block_id=None, text=None, accessory=None, fields=None):
         super().__init__(block_id=block_id)
@@ -68,6 +87,25 @@ class Section(Block):
 
         return block
 
+class Header(Block):
+    def __init__(self, block_id=None, text=None):
+        super().__init__(block_id=block_id)
+        self.text = text
+        self.type = type
+
+    def serialize(self):
+        block = {"type": "header"}
+
+        if not (self.text):
+            raise ValueError
+
+        if self.block_id:
+            block["block_id"] = self.block_id
+
+        if self.text:
+            block["text"] = self.text.serialize()
+
+        return block
 
 class Actions(Block):
     def __init__(self, block_id=None, elements=None):

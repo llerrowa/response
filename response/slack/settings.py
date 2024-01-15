@@ -1,7 +1,11 @@
 from django.conf import settings
 
 INCIDENT_CREATE_MODAL = "incident-create-modal"
+INCIDENT_CREATED_MODAL = "incident-created-modal"
 INCIDENT_EDIT_MODAL = "incident-edit-modal"
+INCIDENT_OVERVIEW_MODAL = "incident-overview-modal"
+UPDATE_SUMMARY_MODAL = "update-summary-modal"
+SHARE_UPDATE_MODAL = "share-update-modal"
 
 SLACK_API_MOCK = getattr(settings, "SLACK_API_MOCK", None)
 

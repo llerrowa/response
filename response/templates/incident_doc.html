@@ -54,7 +54,11 @@
         {% if actions %}
         <ul>
           {% for action in actions.all %}
-          <li>{{ action.details|unslackify|markdown_filter|safe }} </li>
+          <li>
+            {{action.pk}}: {{ action.details }} 
+            {% if action.assigned_to %} {{":mechanic:"|unslackify}} {{ action.assigned_to.display_name }}{% endif %}
+            {% if action.done %} {{":white_check_mark:"|unslackify}} done{% endif %}
+        </li>
           {% endfor %}
         </ul>
         {% endif %}

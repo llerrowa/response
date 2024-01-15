@@ -17,6 +17,10 @@ class IncidentManager(models.Manager):
         summary=None,
         lead=None,
         severity=None,
+        updated_by=None,
+        status_update=None,
+        status_update_last=None,
+        status_update_next=None
     ):
         incident = self.create(
             name=name,
@@ -27,6 +31,10 @@ class IncidentManager(models.Manager):
             summary=summary,
             lead=lead,
             severity=severity,
+            updated_by=updated_by,
+            status_update=status_update,
+            status_update_last=status_update_last,
+            status_update_next=status_update_next
         )
         return incident
 
@@ -63,10 +71,28 @@ class Incident(models.Model):
         help_text="Who is leading?",
     )
 
+    updated_by = models.ForeignKey(
+        ExternalUser,
+        related_name="updated_by",
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True,
+        help_text="Issue updated by?",
+    )
+
     # Severity
     SEVERITIES = (("1", "critical"), ("2", "major"), ("3", "minor"))
     severity = models.CharField(
         max_length=10, blank=True, null=True, choices=SEVERITIES
+    )
+
+    status_update = models.TextField(
+        blank=True, null=True, help_text="Can you provide a status update?"
+    )
+    status_update_last = models.DateTimeField(blank=True, null=True)
+    NEXT_STATUS_UPDATE = (("5", "5 mins"), ("10", "10 mins"), ("30", "30 mins"), ("60", "1 hour"))
+    status_update_next = models.CharField(
+         max_length=10, blank=True, null=True, choices=NEXT_STATUS_UPDATE
     )
 
     def __str__(self):
@@ -113,6 +139,12 @@ class Incident(models.Model):
             return "☁️"
 
         return "🔥"
+
+    def status_update_text(self):
+        for update_id, text in self.NEXT_STATUS_UPDATE:
+            if update_id == self.status_update_next:
+                return text
+        return None
 
     def status_text(self):
         if self.is_closed():

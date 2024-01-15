@@ -28,64 +28,6 @@ logger = logging.getLogger(__name__)
 
 @csrf_exempt
 @slack_authenticate
-def slash_command(request):
-    """
-    Handles slash commands from slack
-    More details here: https://api.slack.com/slash-commands
-    Note: The order the elements are specified is the order they
-    appear in the slack modal
-
-    @param request the request from slack containing the slash command
-    @return: return a HTTP response to indicate the request was handled
-    """
-
-    user_id = request.POST.get("user_id")
-    trigger_id = request.POST.get("trigger_id")
-    report = request.POST.get("text")
-
-    modal = Modal(
-        title="Report an Incident",
-        submit_label="Report",
-        blocks=[
-            Text(
-                label="Title",
-                name="report",
-                placeholder="What's happened, in a sentence?",
-                value=report,
-            )
-        ],
-    )
-
-    modal.add_block(
-        TextArea(
-            label="Summary",
-            name="summary",
-            optional=True,
-            placeholder="Can you share any more details?",
-        )
-    )
-
-    modal.add_block(SelectFromUsers(label="Lead", name="lead", optional=True))
-
-    modal.add_block(
-        SelectWithOptions(
-            [(s.capitalize(), i) for i, s in Incident.SEVERITIES],
-            label="Severity",
-            name="severity",
-            optional=True,
-        )
-    )
-
-    logger.info(
-        f"Handling Slack slash command for user {user_id}, report {report} - opening modal"
-    )
-
-    modal.send_open_modal(INCIDENT_CREATE_MODAL, trigger_id)
-    return HttpResponse()
-
-
-@csrf_exempt
-@slack_authenticate
 def action(request):
     """
     Handles actions sent from Slack.

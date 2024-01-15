@@ -17,10 +17,11 @@ class PinnedMessageManager(models.Manager):
 
         user_data = ExternalUserSerializer(author).data
 
+        msg = f"{name} pinned: {text}"
         timeline_event = TimelineEvent(
             incident=incident,
             timestamp=timestamp,
-            text=text,
+            text=msg,
             event_type="slack_pin",
             metadata={
                 "author": user_data,

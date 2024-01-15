@@ -1,0 +1,13 @@
+Django==4.2.7
+bleach==6.1.0
+bleach-whitelist>=0.0.11
+cryptography>=41.0.5
+django-after-response>=0.2.2
+django-bootstrap4>=23.2
+djangorestframework>=3.14.0
+emoji-data-python==1.5.0
+jsonfield>=3.1.0
+markdown2>=2.4.10
+python-slugify>=8.0.1
+slack_bolt>=1.18.0
+apscheduler==3.10.4

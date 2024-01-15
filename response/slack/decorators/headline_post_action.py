@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 SLACK_HEADLINE_POST_ACTION_MAPPINGS = {}
 
 
-def headline_post_action(order=0, func=None):
+def headline_post_action(order=0, include_in_headline=True, func=None):
     """headline_post_action
 
     Decorator that allows adding a button/action into the headline post. Should be attached
@@ -27,7 +27,7 @@ def headline_post_action(order=0, func=None):
 
     def _wrapper(fn):
         SLACK_HEADLINE_POST_ACTION_MAPPINGS[
-            order
+            (order, include_in_headline)
         ] = SLACK_HEADLINE_POST_ACTION_MAPPINGS.get(order, []) + [fn]
         return fn
 

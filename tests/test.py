@@ -173,6 +173,7 @@ def test_edit_incident(post_from_slack_api, mock_slack):
         summary="Testing editing incidents - before",
         lead=user,
         severity="1",
+        updated_by=user
     )
 
     newsummary = "Testing editing incidents - after"

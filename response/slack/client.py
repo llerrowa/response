@@ -17,7 +17,7 @@ class SlackClient(object):
         self,
         api_token,
         app_token,
-        max_retry_attempts=6,
+        max_retry_attempts=10,
         retry_base_backoff_seconds=2,
         retryable_errors=None,
     ):
@@ -131,8 +131,8 @@ class SlackClient(object):
                 return group["users"]
         return None
 
-    def create_channel(self, name):
-        response = self.api_call(self.client.conversations_create, name=name)
+    def create_channel(self, name, private):
+        response = self.api_call(self.client.conversations_create, name=name, is_private=private)
         try:
             return response["channel"]["id"]
         except KeyError:
@@ -140,9 +140,9 @@ class SlackClient(object):
                 "Got unexpected response from Slack API for conversations.create - couldn't find channel.id key"
             )
 
-    def get_or_create_channel(self, channel_name, auto_unarchive=False):
+    def get_or_create_channel(self, channel_name, auto_unarchive=False, private=False):
         try:
-            return self.create_channel(channel_name)
+            return self.create_channel(channel_name, private=private)
         except SlackError as e:
             if e.slack_error != "name_taken":
                 # some other error, let's propagate it upwards
@@ -155,16 +155,38 @@ class SlackClient(object):
             self.client.conversations_setTopic, channel=channel_id, topic=channel_topic
         )
 
+    def list_channel_bookmarks(self, channel_id):
+        response = self.api_call(
+            self.client.bookmarks_list, channel_id=channel_id
+        )
+        if not response.get("ok", False):
+            raise SlackError(f"Couldn't list bookmarks for channel {channel_id}")
+        
+        return response.data["bookmarks"]
+ 
+    def edit_channel_bookmark(self, channel_id, bookmark_id, bookmark, type, link, emoji):
+        return self.api_call(
+            self.client.bookmarks_edit, channel_id=channel_id, bookmark_id = bookmark_id, title=bookmark, type=type,
+            link=link, emoji=emoji
+        )
+     
+    def add_channel_bookmark(self, channel_id, bookmark, type, link, emoji):
+        return self.api_call(
+            self.client.bookmarks_add, channel_id=channel_id, title=bookmark, type=type,
+            link=link, emoji=emoji
+        )
+       
     def unarchive_channel(self, channel_id):
         response = self.api_call(self.client.conversations_unarchive, channel=channel_id)
         if not response.get("ok", False):
             raise SlackError(f"Couldn't unarchive channel {channel_id}")
 
-    def send_message(self, channel_id, text, attachments=None, thread_ts=None):
+    def send_message(self, channel_id, text, blocks=None, attachments=None, thread_ts=None):
         return self.api_call(
             self.client.chat_postMessage,
             channel=channel_id,
             text=text,
+            blocks=blocks,
             attachments=attachments,
             thread_ts=thread_ts,
         )
@@ -185,6 +207,11 @@ class SlackClient(object):
             api_call, text=fallback_text, channel=channel_id, ts=ts, blocks=blocks
         )
 
+    def pins_add(self, channel_id, ts):        
+        return self.api_call(
+            self.client.pins_add, channel=channel_id, timestamp=ts
+        )
+    
     def add_reaction(self, reaction, channel_id, thread_ts):
         try:
             return self.api_call(
@@ -222,6 +249,11 @@ class SlackClient(object):
             self.client.conversations_invite, users=[user_id], channel=channel_id
         )
 
+    def invite_users_to_channel(self, user_ids, channel_id):
+        return self.api_call(
+            self.client.conversations_invite, users=user_ids, channel=channel_id
+        )
+    
     def join_channel(self, channel_id):
         return self.api_call(self.client.conversations_join, channel=channel_id)
 

@@ -39,17 +39,10 @@ class TimelineEventSerializer(serializers.ModelSerializer):
 
 
 class ActionSerializer(serializers.ModelSerializer):
-    user = ExternalUserSerializer()
+    created_by = ExternalUserSerializer()
     # Read-only field for displaying human-readable slack references. Updates
     # should be applied to the details field.
     details_ui = serializers.SerializerMethodField()
-
-    # This ensures we can't unset priority
-    # https://www.django-rest-framework.org/api-guide/fields/#required
-    # `required = False` means the field doesn't have to be included when the json request is
-    # deserialised (including creation), and so it remains unchanged (if None, it remains None).
-    # `allow_null` is set to False by default so we still demand a value is given _if_ it's sent in the json.
-    priority = serializers.CharField(required=False)
 
     class Meta:
         model = Action
@@ -57,41 +50,34 @@ class ActionSerializer(serializers.ModelSerializer):
             "id",
             "details",
             "done",
-            "user",
+            "assigned_to",
+            "created_by",
             "details_ui",
-            "created_date",
-            "done_date",
-            "due_date",
-            "priority",
-            "type",
+            "created_date"
         )
         read_only_fields = ("id", "created_date")
 
     def create(self, validated_data):
-        user = ExternalUser.objects.get(
+        created_by = ExternalUser.objects.get(
             app_id=validated_data["user"]["app_id"],
             display_name=validated_data["user"]["display_name"],
             external_id=validated_data["user"]["external_id"],
             full_name=validated_data["user"]["full_name"],
         )
-        validated_data["user"] = user
+        validated_data["created_by"] = created_by
 
         return Action.objects.create(**validated_data)
 
     def update(self, instance, validated_data):
-        if "user" in validated_data:
-            instance.user = ExternalUser.objects.get(
-                app_id=validated_data["user"]["app_id"],
-                display_name=validated_data["user"]["display_name"],
-                external_id=validated_data["user"]["external_id"],
-                full_name=validated_data["user"]["full_name"],
+        if "created_by" in validated_data:
+            instance.created_by = ExternalUser.objects.get(
+                app_id=validated_data["created_by"]["app_id"],
+                display_name=validated_data["created_by"]["display_name"],
+                external_id=validated_data["created_by"]["external_id"],
+                full_name=validated_data["created_by"]["full_name"],
             )
         instance.details = validated_data.get("details", instance.details)
         instance.done = validated_data.get("done", instance.done)
-        instance.priority = validated_data.get("priority", instance.priority)
-        instance.type = validated_data.get("type", instance.type)
-        instance.done_date = validated_data.get("done_date", instance.done_date)
-        instance.due_date = validated_data.get("due_date", instance.due_date)
         instance.save()
         return instance
 
@@ -110,6 +96,7 @@ class CommsChannelSerializer(serializers.ModelSerializer):
 class IncidentSerializer(serializers.ModelSerializer):
     reporter = ExternalUserSerializer(read_only=True)
     lead = ExternalUserSerializer()
+    updated_by = ExternalUserSerializer()
     comms_channel = CommsChannelSerializer(read_only=True)
     action_items = ActionSerializer(read_only=True, many=True)
 
@@ -135,6 +122,7 @@ class IncidentSerializer(serializers.ModelSerializer):
             "severity",
             "start_time",
             "summary",
+            "updated_by",
         )
 
     def update(self, instance, validated_data):

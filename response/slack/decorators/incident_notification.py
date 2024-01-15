@@ -48,12 +48,13 @@ def recurring_notification(interval_mins, max_notifications=1):
     """
 
     def _wrapper(fn):
+        adjusted_max_notifications = max_notifications - 1 if max_notifications is not None else None
         NOTIFICATION_HANDLERS.append(
             NotificationHandler(
                 key=fn.__name__,
                 callback=fn,
                 interval_mins=interval_mins,
-                max_notifications=max_notifications - 1,
+                max_notifications=adjusted_max_notifications,
             )
         )
         return fn
@@ -79,7 +80,7 @@ def handle_notifications():
                 # if we can find a previous notification for this incident/handler pair and
                 # it's been set to not repeat, exit here
                 if (
-                    notification.repeat_count >= handler.max_notifications
+                    (handler.max_notifications != None and notification.repeat_count >= handler.max_notifications) 
                     or notification.completed
                 ):
                     continue

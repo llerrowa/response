@@ -84,7 +84,7 @@ def incident_command(commands: list, func=None, helptext=""):
     return _wrapper
 
 
-def handle_incident_command(command_name, message, thread_ts, channel_id, user_id):
+def handle_incident_command(command_name, message, thread_ts, channel_id, user_id, respond=None):
     """
     Handler for app mention events of the format @<bot> <command> <extra text>
 
@@ -94,13 +94,14 @@ def handle_incident_command(command_name, message, thread_ts, channel_id, user_i
         command_name not in COMMAND_MAPPINGS
         and command_name not in COMMAND_MAPPINGS_CUSTOM
     ):
-        settings.SLACK_CLIENT.send_ephemeral_message(
-            channel_id,
-            user_id,
-            "I'm sorry, I don't know how to help with that :grimacing:",
-        )
+        text = "I'm sorry, I don't know how to help with that :grimacing:"
+        if respond != None:
+            respond(text)
+        else:
+            settings.SLACK_CLIENT.send_ephemeral_message(channel_id, user_id, text)
 
-        react_not_ok(channel_id, thread_ts)
+        if thread_ts != None:
+            react_not_ok(channel_id, thread_ts)
 
         logger.error(f"No handler found for command {command_name}")
         return
@@ -118,15 +119,16 @@ def handle_incident_command(command_name, message, thread_ts, channel_id, user_i
 
     try:
         comms_channel = CommsChannel.objects.get(channel_id=channel_id)
-        handled, response = command(comms_channel.incident, user_id, message)
+        handled, response = command(comms_channel.incident, user_id, message, respond)
 
-        if handled:
-            react_ok(channel_id, thread_ts)
-        else:
+        if thread_ts != None and not handled:
             react_not_ok(channel_id, thread_ts)
 
         if response:
-            settings.SLACK_CLIENT.send_message(comms_channel.channel_id, response)
+            if thread_ts != None:
+                settings.SLACK_CLIENT.send_message(comms_channel.channel_id, response)
+            elif respond != None:
+                respond(response)
 
     except CommsChannel.DoesNotExist:
         logger.error("No matching incident found for this channel")
@@ -137,31 +139,8 @@ def handle_incident_command(command_name, message, thread_ts, channel_id, user_i
 
 def react_not_ok(channel_id, thread_ts):
     try:
-        settings.SLACK_CLIENT.remove_reaction("white_check_mark", channel_id, thread_ts)
+        settings.SLACK_CLIENT.add_reaction("x", channel_id, thread_ts)
     except SlackError as e:
         logger.error(
-            f"Couldn't remove existing reaction from {channel_id} - {thread_ts}. Error: {e}"
-        )
-
-    try:
-        settings.SLACK_CLIENT.add_reaction("question", channel_id, thread_ts)
-    except SlackError as e:
-        logger.error(
-            f"Couldn't add 'question' reaction to {channel_id} - {thread_ts}. Error: {e}"
-        )
-
-
-def react_ok(channel_id, thread_ts):
-    try:
-        settings.SLACK_CLIENT.remove_reaction("question", channel_id, thread_ts)
-    except SlackError as e:
-        logger.error(
-            f"Couldn't remove existing reaction from {channel_id} - {thread_ts}. Error: {e}"
-        )
-
-    try:
-        settings.SLACK_CLIENT.add_reaction("white_check_mark", channel_id, thread_ts)
-    except SlackError as e:
-        logger.error(
-            f"Couldn't add 'white_check_mark' reaction to {channel_id} - {thread_ts}. Error: {e}"
+            f"Couldn't add 'x' reaction to {channel_id} - {thread_ts}. Error: {e}"
         )

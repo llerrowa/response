@@ -27,10 +27,11 @@ wait_for_db
 
 echo "[INFO] Migrating database"
 cd /app
+
 python3 manage.py migrate --noinput
 
 echo "[INFO] Creating Admin User"
 create_admin_user
 
 echo "[INFO] Starting Response Dev Server"
-python3 manage.py runserver 0.0.0.0:8000
+pip install debugpy -t /tmp && python3 /tmp/debugpy --wait-for-client --listen 0.0.0.0:5678 manage.py runserver 0.0.0.0:8000

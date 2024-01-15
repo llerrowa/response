@@ -9,22 +9,28 @@ class Action(models.Model):
     created_date = models.DateTimeField(null=True, auto_now_add=True)
     details = models.TextField(blank=True, default="")
     done = models.BooleanField(default=False)
-    done_date = models.DateTimeField(null=True)
-    due_date = models.DateTimeField(null=True)
     incident = models.ForeignKey(Incident, on_delete=models.CASCADE)
-    user = models.ForeignKey(
-        ExternalUser, on_delete=models.CASCADE, blank=False, null=False
+    assigned_to = models.ForeignKey(
+        ExternalUser,
+        related_name="assigned_to",
+        on_delete=models.CASCADE,
+        blank=False,
+        null=True,
     )
-
-    # Priority
-    PRIORITIES = (("1", "high"), ("2", "medium"), ("3", "low"))
-    priority = models.CharField(
-        max_length=10, blank=True, null=True, choices=PRIORITIES
+    created_by = models.ForeignKey(
+        ExternalUser,
+        related_name="created_by",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
     )
-
-    # Type
-    TYPES = (("1", "detective"), ("2", "preventative"), ("3", "corrective"))
-    type = models.CharField(max_length=10, blank=True, null=True, choices=TYPES)
+    updated_by = models.ForeignKey(
+        ExternalUser,
+        related_name="edited_by",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+    )
 
     def icon(self):
         return "🔜️"

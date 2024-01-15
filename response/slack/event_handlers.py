@@ -40,6 +40,32 @@ def decode_app_mention(payload):
     return slack_id, command, extra
 
 
+# could replace with proper command line parsing
+def decode_command(payload):
+    """
+    Convenience function for dealing with the common pattern for command slack events.
+
+    Example: /command create Something's happened
+    Extracts:  command  -> "create"
+               extra    -> "Something's happened"
+
+    @param payload an app mention string of the form @bot create Something's happened
+    @return: three variables split by bot, action and extra text
+    """
+    incident_command_re = re.compile(r"(\w+)\s*(.*)")
+    m = incident_command_re.match(payload.strip())
+
+    if not m or len(m.groups()) != 2:
+        raise ValueError(
+            f'Could not parse command mention payload "{payload}" into "/command <command> <text>"'
+        )
+
+    command = m.group(1)
+    extra = m.group(2)
+
+    return command, extra
+
+
 @slack_event("app_mention")
 def handle_app_mention(incident: Incident, payload: json):
     """

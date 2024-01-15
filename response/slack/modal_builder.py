@@ -2,7 +2,7 @@ from django.conf import settings
 import json
 
 class Modal:
-    def __init__(self, title, submit_label, blocks=None, state=None):
+    def __init__(self, title, submit_label=None, blocks=None, state=None):
         self.title = title
         self.submit_label = submit_label
         self.state = state
@@ -27,18 +27,19 @@ class Modal:
                 "type": "plain_text",
                 "text": self.title
             },
-            "submit": {
-                "type": "plain_text",
-                "text": self.submit_label
-            },
             "callback_id": callback_id,
             "blocks": blocks
         }
 
+        if self.submit_label:
+            modal["submit"] = {
+                "type": "plain_text",
+                "text": self.submit_label
+            }
         if self.state:
             modal["private_metadata"] = json.dumps(self.state)
         else:
-            modal["private_metadata"] = ''
+            modal["private_metadata"] = ""
         
         return modal
 
@@ -86,7 +87,7 @@ class Element:
             block["element"]["placeholder"] = {
                     "type": "plain_text",
                     "text": self.placeholder
-                }
+            }
             
         return block    
 
@@ -102,11 +103,13 @@ class Text(Element):
         placeholder=None,
     ):
         super().__init__(label, name, optional, hint, value, placeholder)
-        self.element_type = 'plain_text_input'
+        self.element_type = "plain_text_input"
 
     def to_block(self):
-        block = super().to_block_base()
-        block['element']["initial_value"] = self.value
+        block = super().to_block()
+
+        if self.value:
+            block["element"]["initial_value"] = self.value
 
         return block
 
@@ -122,13 +125,47 @@ class TextArea(Element):
         multiline=False
     ):
         super().__init__(label, name, optional, hint, value, placeholder)        
-        self.element_type = 'plain_text_input'
+        self.element_type = "plain_text_input"
         self.multiline = multiline
 
     def to_block(self):
-        block = super().to_block_base()     
-        block['element']["initial_value"] = self.value   
-        block['element']["multiline"] = self.multiline
+        block = super().to_block()
+        block["element"]["multiline"] = self.multiline
+
+        if self.value:
+            block["element"]["initial_value"] = self.value
+
+        return block
+
+class Checkboxes(Element):
+    def __init__(
+        self,
+        options,
+        label=None,
+        name=None,
+        optional=False,
+        hint=None,
+        value=None,
+        placeholder=None,
+    ):
+        super().__init__(label, name, optional, hint, value, placeholder)
+        self.element_type = "checkboxes"
+        self.options = [{"label": lbl, "value": val} for lbl, val in options]
+
+    def to_block(self):
+        block = super().to_block()
+        block["element"]["options"] = [
+            {
+                "text": {"type": "plain_text", "text": option["label"]},
+                "value": option["value"]
+            } for option in self.options
+        ]
+
+        # if self.value:            
+        #     block["element"]["initial_option"] = {
+        #             "text": {"type": "plain_text", "text": self.options[int(self.value) - 1]["label"]},
+        #             "value": self.value
+        #         }            
 
         return block
 
@@ -144,17 +181,24 @@ class SelectWithOptions(Element):
         placeholder=None,
     ):
         super().__init__(label, name, optional, hint, value, placeholder)
-        self.element_type = 'static_select'
+        self.element_type = "static_select"
         self.options = [{"label": lbl, "value": val} for lbl, val in options]
 
     def to_block(self):
-        block = super().to_block_base()
-        block['element']['options'] = [
+        block = super().to_block()
+        block["element"]["options"] = [
             {
-                'text': {'type': 'plain_text', 'text': option['label']},
-                'value': option['value']
+                "text": {"type": "plain_text", "text": option["label"]},
+                "value": option["value"]
             } for option in self.options
         ]
+
+        if self.value:
+            
+            block["element"]["initial_option"] = {
+                    "text": {"type": "plain_text", "text": self.options[int(self.value) - 1]["label"]},
+                    "value": self.value
+                }            
 
         return block
 
@@ -169,5 +213,97 @@ class SelectFromUsers(Element):
         placeholder=None,
     ):
         super().__init__(label, name, optional, hint, value, placeholder)
-        self.element_type = 'users_select'
-        
+        self.element_type = "users_select"
+
+    def to_block(self):
+        block = super().to_block()
+
+        if self.value:
+            block["element"]["initial_user"] = self.value
+
+        return block 
+    
+class Section():
+    def __init__(
+        self,
+        text
+    ):
+        self.element_type = "section"
+        self.text = text
+    
+    def to_block(self):
+        block = {
+            "type": self.element_type,
+			"text": {
+				"type": "mrkdwn",
+				"text": self.text
+			}
+        }
+
+        return block
+     
+class Header():
+    def __init__(
+        self,
+        text
+    ):
+        self.element_type = "header"
+        self.text = text
+    
+    def to_block(self):
+        block = {
+            "type": self.element_type,
+			"text": {
+				"type": "plain_text",
+				"text": self.text
+			}
+        }
+
+        return block
+       
+class Divider():
+    def to_block(self):
+        return {"type": "divider"} 
+    
+class Button:
+    def __init__(self, text, action_id, text_type="plain_text", value=None, confirm=None):
+        self.text = {
+            "type": text_type,
+            "text": text,
+            "emoji": True
+        }
+        self.action_id = action_id
+        self.value = value
+        self.confirm = confirm
+
+    def to_block(self):
+        button = {
+            "type": "button",
+            "text": self.text,
+            "action_id": self.action_id,
+        }
+
+        if self.confirm:
+            button["confirm"] = self.confirm.serialize()
+
+        if self.value:
+            button["value"] = str(self.value)
+
+        return button
+
+class Actions():
+    def __init__(self, elements=None):
+        self.elements = elements
+
+    def add_element(self, element):
+        if not self.elements:
+            self.elements = []
+
+        self.elements.append(element)
+
+    def to_block(self):
+        block = {"type": "actions"}
+
+        block["elements"] = [e.to_block() for e in self.elements]
+
+        return block

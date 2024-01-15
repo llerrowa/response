@@ -18,7 +18,7 @@ def remove_modal_handler(callback_id):
     MODAL_HANDLERS.pop(callback_id, None)
 
 
-def handle_modal(payload, callback_id, channel_id):
+def handle_modal(payload, callback_id):
     if callback_id not in MODAL_HANDLERS:
         logger.error(f"Can't find handler for modal id {callback_id}")
         return
@@ -27,5 +27,7 @@ def handle_modal(payload, callback_id, channel_id):
 
     user_id = payload["user"]["id"]
     state = payload["view"]["state"]["values"]
+    metadata = payload["view"]["private_metadata"]
+    trigger_id = payload["trigger_id"]
 
-    callback(user_id, state, channel_id)
+    callback(user_id, state, metadata, trigger_id)
