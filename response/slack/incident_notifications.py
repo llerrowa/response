@@ -67,8 +67,7 @@ def remind_close_incident(incident: Incident):
         if not incident.is_closed():
             user_to_notify = incident.lead or incident.reporter
             comms_channel.post_in_channel(
-                f":timer_clock: {user_reference(user_to_notify.external_id)}> - this incident has been running a long time,"
-                "can it be closed now?"
+                f":timer_clock: {user_reference(user_to_notify.external_id)}> - this incident has been running a long time, can it be closed now?"
             )
     except CommsChannel.DoesNotExist:
         pass

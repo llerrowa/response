@@ -1,23 +1,14 @@
 #! /bin/bash
 
-pip install -e /response
-
-wait_for_db()
-{
-    while ! nc -z ${DB_HOST:-db} ${DB_PORT:-5432};
-    do sleep 1;
-    done;
-}
+pip install -e ./
 
 echo "[INFO] Collectstastic"
-cd /app
+cd /app/demo
 python3 manage.py collectstatic --noinput
 
-echo "[INFO] Waiting for DB"
-wait_for_db
-
 echo "[INFO] Migrating database"
-cd /app
+cd /app/demo
 python3 manage.py migrate --noinput
 
-exec "$@"
+#exec "$@"
+python3 manage.py runserver 0.0.0.0:8000

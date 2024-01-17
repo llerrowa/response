@@ -1,13 +1,5 @@
 #! /bin/bash
-
-pip install -e /response
-
-wait_for_db()
-{
-    while ! nc -z ${DB_HOST:-db} ${DB_PORT:-5432};
-    do sleep 1;
-    done;
-}
+pip install -e ./
 
 create_admin_user()
 {
@@ -22,11 +14,8 @@ except IntegrityError:
 EOF
 }
 
-echo "[INFO] Waiting for DB"
-wait_for_db
-
 echo "[INFO] Migrating database"
-cd /app
+cd /app/demo
 
 python3 manage.py migrate --noinput
 

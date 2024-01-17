@@ -8,19 +8,12 @@ services:
     image: response
     container_name: response
     entrypoint: bash
-    command: /app/startup-dev.sh
+    command: /app/demo/startup-dev.sh
     ports:
       - "8000:8000"
       - "5678:5678"
-    depends_on:
-      - db
-    environment:
-      POSTGRES: "true"
-    env_file: .env-dev
-    volumes:
-      - ./:/app
-      - ../:/response
-      - pypd:/app/pypd
+    env_file: demo/.env-dev
+
     stdin_open: true
     tty: true
 
@@ -34,14 +27,3 @@ services:
       - response
     tty: true
 
-  db:
-    image: "postgres:16.0"
-    container_name: postgres
-    environment:
-      POSTGRES_PASSWORD: example
-    volumes:
-      - postgres_data:/var/lib/postgresql/data/
-
-volumes:
-  postgres_data:
-  pypd:

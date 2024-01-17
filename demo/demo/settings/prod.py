@@ -7,18 +7,13 @@ SITE_URL = os.environ.get("SITE_URL")
 
 DEBUG = False
 
-if os.environ.get("POSTGRES"):
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "HOST": os.environ.get("DB_HOST"),
-            "PORT": os.environ.get("DB_PORT"),
-            "USER": os.environ.get("DB_USER"),
-            "NAME": os.environ.get("DB_NAME"),
-            "PASSWORD": os.environ.get("DB_PASSWORD"),
-            "SSLMODE": os.environ.get("DB_SSL_MODE"),
-        }
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": os.path.join(BASE_DIR, "database/db.sqlite3"),
     }
+}
 
 LOGGING = {
     "version": 1,

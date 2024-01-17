@@ -5,18 +5,12 @@ from .base import SLACK_CLIENT, get_env_var
 
 SITE_URL = "http://localhost:8000"
 
-if os.environ.get("POSTGRES"):
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "HOST": os.getenv("DB_HOST", "db"),
-            "PORT": os.getenv("DB_PORT", "5432"),
-            "USER": os.getenv("DB_USER", "postgres"),
-            "NAME": os.getenv("DB_NAME", "postgres"),
-            "PASSWORD": os.environ.get("DB_PASSWORD", "example"),
-        }
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": os.path.join(BASE_DIR, "database/db.sqlite3"),
     }
-
+}
 
 LOGGING = {
     "version": 1,

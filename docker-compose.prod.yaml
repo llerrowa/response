@@ -1,0 +1,40 @@
+version: '3'
+services:
+
+  response:
+    build:
+      context: .
+      dockerfile: Dockerfile.response.prod
+    image: response
+    container_name: response
+    command: /app/demo/startup-prod.sh #gunicorn demo.wsgi:application --bind 0.0.0.0:8000
+    expose:
+      - "8000"
+    env_file: demo/.env-prod
+    volumes:
+      - static_volume:/home/app/web/staticfiles
+    stdin_open: true
+    tty: true
+
+  cron:
+    build:
+      context: .
+      dockerfile: Dockerfile.cron
+    image: cron
+    container_name: cron
+    depends_on:
+      - response
+    tty: true    
+  
+  # nginx:
+  #   image: nginx:1.19.0-alpine
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/conf.d/default.conf
+  #     - static_volume:/home/app/web/staticfiles
+  #   depends_on:
+  #     - response
+  #   ports:
+  #     - "8080:80"
+
+volumes:
+  static_volume:

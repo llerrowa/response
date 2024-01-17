@@ -1,0 +1,19 @@
+FROM python:3.12-slim-bullseye AS base
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    netcat-traditional \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir /app
+WORKDIR /app
+
+COPY /demo/requirements-dev.txt /app
+RUN pip install -r requirements-dev.txt
+
+RUN mkdir -p /app/demo/demo/database
+
+COPY . /app/
+
+ENTRYPOINT [ "/app/demo/startup-dev.sh" ]
+#ENTRYPOINT ["python", "demo/manage.py"]
+#CMD ["runserver", "0.0.0.0:8000"]
